@@ -61,8 +61,9 @@ body, html {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', 'Noto Sans TC', 'Noto Sans JP', Arial, sans-serif;
-  background: #222831;
+  background: #181c24;
   min-height: 100vh;
+  color: #f5f6fa;
 }
 
 .kana-table-row {
@@ -77,18 +78,19 @@ body, html {
   margin: 0 auto 16px auto;
   width: 100%;
   max-width: 400px;
-  background: #fff;
+  background: #232a36;
   box-shadow: 0 2px 12px #0003;
   border-radius: 8px;
   overflow: hidden;
 }
 .kana-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #444a57;
   width: 20%;
   height: 48px;
   text-align: center;
   font-size: 1.6em;
-  background: #fafbfc;
+  background: #232a36;
+  color: #fffde7;
 }
 
 @media (max-width: 600px) {
@@ -106,24 +108,31 @@ body, html {
 }
 
 .quiz-area {
-  background: #fff;
+  background: #232a36;
   border-radius: 8px;
   box-shadow: 0 2px 12px #0003;
   padding: 16px;
   margin: 0 auto 16px auto;
   max-width: 400px;
+  color: #fffde7;
 }
 .quiz-area button {
   font-size: 1.1em;
   padding: 10px 0;
   border-radius: 6px;
-  border: 1px solid #bbb;
-  background: #f5f5f5;
+  border: 1px solid #ffd600;
+  background: #232a36;
+  color: #ffd600;
   margin: 4px 0;
   width: 44vw;
   max-width: 140px;
   min-width: 80px;
   box-shadow: 0 1px 2px #0001;
+  transition: background 0.2s, color 0.2s;
+}
+.quiz-area button:active {
+  background: #ffd600;
+  color: #232a36;
 }
 @media (max-width: 600px) {
   .quiz-area {
@@ -142,14 +151,16 @@ button {
   font-size: 1em;
   padding: 8px 16px;
   border-radius: 6px;
-  border: 1px solid #bbb;
-  background: #f5f5f5;
+  border: 1px solid #ffd600;
+  background: #232a36;
+  color: #ffd600;
   margin: 2px 4px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 button:active {
-  background: #e0e0e0;
+  background: #ffd600;
+  color: #232a36;
 }
 
 h1 {
@@ -169,4 +180,20 @@ h1 {
     font-size: 1em;
     height: 28px;
   }
+}
+/* 歷史成績區塊樣式 */
+h2 {
+  color: #ffd600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 8px #0008;
+}
+ul {
+  color: #fffde7;
+  font-size: 1.08em;
+  padding-left: 1.2em;
+}
+li {
+  color: #fffde7;
+  margin-bottom: 4px;
 }
