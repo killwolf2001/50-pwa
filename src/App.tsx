@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // 五十音資料與階段分組
 const HIRAGANA = [
@@ -101,33 +101,35 @@ function App() {
     // 目前階段的母音橫列 index
     const rowIdx = stage - 1;
     return (
-      <table className="kana-table">
-        <tbody>
-          {kana.map((row, i) => (
-            <tr key={i}>
-              {row.map((k, j) => {
-                let cell = '-';
-                let isActive = false;
-                if (i === rowIdx && k) {
-                  isActive = true;
-                  if (type === 'kana') cell = k;
-                  else cell = ROMAJI[i][j] || '-';
-                }
-                return (
-                  <td
-                    key={j}
-                    style={isActive && type === 'kana' ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
-                    onClick={isActive && type === 'kana' ? () => speakKana(k, ROMAJI[i][j]) : undefined}
-                    title={isActive && type === 'kana' ? '點擊發音' : ''}
-                  >
-                    {cell}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-responsive">
+        <table className="table table-bordered text-center align-middle w-100" style={{fontSize: 'clamp(1.2rem, 4vw, 2.2rem)'}}>
+          <tbody>
+            {kana.map((row, i) => (
+              <tr key={i}>
+                {row.map((k, j) => {
+                  let cell = '-';
+                  let isActive = false;
+                  if (i === rowIdx && k) {
+                    isActive = true;
+                    if (type === 'kana') cell = k;
+                    else cell = ROMAJI[i][j] || '-';
+                  }
+                  return (
+                    <td
+                      key={j}
+                      style={isActive && type === 'kana' ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
+                      onClick={isActive && type === 'kana' ? () => speakKana(k, ROMAJI[i][j]) : undefined}
+                      title={isActive && type === 'kana' ? '點擊發音' : ''}
+                    >
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
@@ -199,86 +201,86 @@ function App() {
   }
 
   return (
-    <div>
-      <h1>日文五十音學習</h1>
-      <div style={{ marginBottom: 16 }}>
-        <button onClick={() => setMode('table')}>五十音表</button>
-        <button onClick={() => setMode('quiz')}>隨機測驗</button>
-        <button onClick={() => setMode('result')}>成績記錄</button>
+    <div className="container py-3">
+      <h1 className="text-center mb-4">日文五十音學習</h1>
+      <div className="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+        <button className="btn btn-primary" onClick={() => setMode('table')}>五十音表</button>
+        <button className="btn btn-success" onClick={() => setMode('quiz')}>隨機測驗</button>
+        <button className="btn btn-warning" onClick={() => setMode('result')}>成績記錄</button>
       </div>
       {mode === 'table' && (
-        <div>
-          <div style={{ marginBottom: 8 }}>
-            <button onClick={() => setKanaType('hiragana')}>平假名</button>
-            <button onClick={() => setKanaType('katakana')}>片假名</button>
+        <div className="text-center">
+          <div className="mb-2">
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='hiragana'?'active':''}`} onClick={() => setKanaType('hiragana')}>平假名</button>
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='katakana'?'active':''}`} onClick={() => setKanaType('katakana')}>片假名</button>
           </div>
           {kanaType === 'hiragana' && (
-            <div className="kana-table-row">
-              <div>
-                <div style={{ marginBottom: 4, fontWeight: 'bold' }}>平假名</div>
+            <div className="row justify-content-center">
+              <div className="col-12 col-md-6 col-lg-5 mb-3">
+                <div className="fw-bold mb-1">平假名</div>
                 {renderTable(HIRAGANA, 'kana')}
               </div>
-              <div className="romaji-table-desktop">
-                <div style={{ marginBottom: 4, fontWeight: 'bold' }}>羅馬拼音</div>
+              <div className="col-12 col-md-6 col-lg-5 mb-3 d-none d-md-block romaji-table-desktop">
+                <div className="fw-bold mb-1">羅馬拼音</div>
                 {renderTable(ROMAJI, 'romaji')}
               </div>
             </div>
           )}
           {kanaType === 'katakana' && (
-            <div className="kana-table-row">
-              <div>
-                <div style={{ marginBottom: 4, fontWeight: 'bold' }}>片假名</div>
+            <div className="row justify-content-center">
+              <div className="col-12 col-md-6 col-lg-5 mb-3">
+                <div className="fw-bold mb-1">片假名</div>
                 {renderTable(KATAKANA, 'kana')}
               </div>
-              <div className="romaji-table-desktop">
-                <div style={{ marginBottom: 4, fontWeight: 'bold' }}>羅馬拼音</div>
+              <div className="col-12 col-md-6 col-lg-5 mb-3 d-none d-md-block romaji-table-desktop">
+                <div className="fw-bold mb-1">羅馬拼音</div>
                 {renderTable(ROMAJI, 'romaji')}
               </div>
             </div>
           )}
           {/* 手機顯示羅馬拼音浮現區 */}
           {mobileRomaji && (
-            <div className="mobile-romaji-popup">{mobileRomaji}</div>
+            <div className="mobile-romaji-popup position-fixed start-50 translate-middle-x" style={{bottom:'18vh',zIndex:100,background:'rgba(30,34,44,0.98)',color:'#ffd600',fontSize:'2.2em',fontWeight:'bold',textAlign:'center',borderRadius:'16px',boxShadow:'0 4px 24px #0008',padding:'18px 0 14px 0',width:'80vw',maxWidth:'340px',pointerEvents:'none',letterSpacing:'0.08em'}}>{mobileRomaji}</div>
           )}
         </div>
       )}
       {mode === 'quiz' && (
-        <div>
-          <div style={{ marginBottom: 8 }}>
-            <button onClick={() => setKanaType('hiragana')}>平假名</button>
-            <button onClick={() => setKanaType('katakana')}>片假名</button>
+        <div className="text-center">
+          <div className="mb-2">
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='hiragana'?'active':''}`} onClick={() => setKanaType('hiragana')}>平假名</button>
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='katakana'?'active':''}`} onClick={() => setKanaType('katakana')}>片假名</button>
           </div>
-          <div style={{ marginBottom: 8, color: '#ffb700' }}>
-            <b>目前階段：</b> {stage} / {STAGES}（已解鎖 {unlockedCount} 個音）<br />
+          <div className="mb-2 text-warning fw-bold">
+            <span>目前階段：</span> {stage} / {STAGES}（已解鎖 {unlockedCount} 個音）<br />
             <span>
               {stagePerfectCount[stage-1] ? `本階段已全對 ${stagePerfectCount[stage-1]} 次` : ''}
               {stagePerfectCount[stage-1] === 10 && stage < STAGES ? ' 🎉 恭喜！已解鎖下一階段！' : ''}
             </span>
           </div>
-          <div className="quiz-area">
-            <div style={{ fontSize: 48, margin: 16 }}>{quizKana}</div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1em', flexWrap: 'wrap', marginBottom: 16 }}>
+          <div className="quiz-area mx-auto p-3 rounded bg-light shadow-sm" style={{maxWidth:400}}>
+            <div className="display-4 my-3">{quizKana}</div>
+            <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
               {options.map(opt => (
-                <button key={opt} style={{ minWidth: 80, fontSize: 20 }} onClick={() => handleChoice(opt)} disabled={score.length >= MAX_QUIZ_QUESTIONS}>{opt}</button>
+                <button key={opt} className="btn btn-outline-primary" style={{minWidth:80,fontSize:20}} onClick={() => handleChoice(opt)} disabled={score.length >= MAX_QUIZ_QUESTIONS}>{opt}</button>
               ))}
             </div>
-            <div style={{ margin: 8 }}>
+            <div className="mb-2">
               <span>答對：{score.filter(s => s === 1).length} / {MAX_QUIZ_QUESTIONS}</span>
-              <button style={{ marginLeft: 8 }} onClick={() => finishQuiz()} disabled={score.length < MAX_QUIZ_QUESTIONS}>結算成績</button>
+              <button className="btn btn-success ms-2" onClick={() => finishQuiz()} disabled={score.length < MAX_QUIZ_QUESTIONS}>結算成績</button>
             </div>
-            {score.length >= MAX_QUIZ_QUESTIONS && <div style={{ color: '#f00', marginTop: 8 }}>已完成 10 題，請點「結算成績」</div>}
+            {score.length >= MAX_QUIZ_QUESTIONS && <div className="text-danger mt-2">已完成 10 題，請點「結算成績」</div>}
           </div>
         </div>
       )}
       {mode === 'result' && (
-        <div>
-          <h2>歷史成績</h2>
-          <ul>
+        <div className="text-center">
+          <h2 className="text-warning mt-4 mb-3">歷史成績</h2>
+          <ul className="list-unstyled text-light">
             {history.map((s, i) => (
-              <li key={i}>第 {i + 1} 次：階段 {s.stage}，{s.correct} / {s.total} 全對</li>
+              <li key={i} className="mb-1">第 {i + 1} 次：階段 {s.stage}，{s.correct} / {s.total} 全對</li>
             ))}
           </ul>
-          <button onClick={restart}>再測一次</button>
+          <button className="btn btn-primary" onClick={restart}>再測一次</button>
         </div>
       )}
     </div>
