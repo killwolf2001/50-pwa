@@ -1,3 +1,19 @@
+/* 歷史成績區塊樣式 */
+h2 {
+  color: #ffd600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 8px #0008;
+}
+ul {
+  color: #fffde7;
+  font-size: 1.08em;
+  padding-left: 1.2em;
+}
+li {
+  color: #fffde7;
+  margin-bottom: 4px;
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -45,7 +61,7 @@ body, html {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', 'Noto Sans TC', 'Noto Sans JP', Arial, sans-serif;
-  background: #f7f7f7;
+  background: #222831;
   min-height: 100vh;
 }
 
@@ -62,7 +78,7 @@ body, html {
   width: 100%;
   max-width: 400px;
   background: #fff;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 12px #0003;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -92,7 +108,7 @@ body, html {
 .quiz-area {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 12px #0003;
   padding: 16px;
   margin: 0 auto 16px auto;
   max-width: 400px;
@@ -140,6 +156,9 @@ h1 {
   text-align: center;
   margin: 16px 0 8px 0;
   font-size: 2em;
+  color: #ffd600;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 8px #0008;
 }
 
 @media (max-width: 400px) {

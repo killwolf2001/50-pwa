@@ -81,6 +81,14 @@ function App() {
     localStorage.setItem('kana_perfect', JSON.stringify(stagePerfectCount));
   }, [history, stage, stagePerfectCount]);
 
+  // 點擊假名時發音
+  function speakKana(kana: string) {
+    if (!kana) return;
+    const utter = new window.SpeechSynthesisUtterance(kana);
+    utter.lang = 'ja-JP';
+    window.speechSynthesis.speak(utter);
+  }
+
   // 顯示五十音表（只顯示目前階段的母音橫列，其餘為 '-'）
   const renderTable = (kana: string[][], type: 'kana' | 'romaji') => {
     // 目前階段的母音橫列 index
@@ -92,11 +100,22 @@ function App() {
             <tr key={i}>
               {row.map((k, j) => {
                 let cell = '-';
+                let isActive = false;
                 if (i === rowIdx && k) {
+                  isActive = true;
                   if (type === 'kana') cell = k;
                   else cell = ROMAJI[i][j] || '-';
                 }
-                return <td key={j}>{cell}</td>;
+                return (
+                  <td
+                    key={j}
+                    style={isActive && type === 'kana' ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
+                    onClick={isActive && type === 'kana' ? () => speakKana(k) : undefined}
+                    title={isActive && type === 'kana' ? '點擊發音' : ''}
+                  >
+                    {cell}
+                  </td>
+                );
               })}
             </tr>
           ))}
