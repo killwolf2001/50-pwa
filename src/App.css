@@ -121,14 +121,15 @@ body, html {
 
 .kana-table {
   border-collapse: collapse;
-  width: 40vw;
+  width: 100%;
   min-width: 140px;
   max-width: 400px;
   background: #232a36;
   box-shadow: 0 2px 12px #0003;
   border-radius: 8px;
   overflow: hidden;
-  margin: 0;
+  margin: 0 auto 12px auto;
+  transition: width 0.2s;
 }
 .kana-table td {
   border: 1px solid #444a57;
@@ -147,8 +148,9 @@ body, html {
     gap: 12px;
   }
   .kana-table {
-    width: 90vw;
+    width: 98vw;
     max-width: 98vw;
+    min-width: 0;
     font-size: 0.95em;
   }
 }
@@ -223,7 +225,7 @@ h1 {
     max-width: 100vw;
   }
   .kana-table {
-    width: 98vw;
+    width: 99vw;
     min-width: 0;
   }
   .kana-table td {
