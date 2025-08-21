@@ -63,6 +63,8 @@ function App() {
   const MAX_QUIZ_QUESTIONS = 10;
   const [history, setHistory] = useState<{stage: number, correct: number, total: number}[]>([]); // 歷史成績
   const [stagePerfectCount, setStagePerfectCount] = useState<number[]>([]); // 每階段10次全對次數
+  // 新增：手機版假名點擊時顯示羅馬拼音
+  const [mobileRomaji, setMobileRomaji] = useState<string>('');
 
   // 載入進度
   useEffect(() => {
@@ -82,11 +84,16 @@ function App() {
   }, [history, stage, stagePerfectCount]);
 
   // 點擊假名時發音
-  function speakKana(kana: string) {
+  function speakKana(kana: string, romaji?: string) {
     if (!kana) return;
     const utter = new window.SpeechSynthesisUtterance(kana);
     utter.lang = 'ja-JP';
     window.speechSynthesis.speak(utter);
+    // 僅在手機/窄螢幕時顯示羅馬拼音
+    if (window.innerWidth <= 900 && romaji) {
+      setMobileRomaji(romaji);
+      setTimeout(() => setMobileRomaji(''), 1800);
+    }
   }
 
   // 顯示五十音表（只顯示目前階段的母音橫列，其餘為 '-'）
@@ -110,7 +117,7 @@ function App() {
                   <td
                     key={j}
                     style={isActive && type === 'kana' ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
-                    onClick={isActive && type === 'kana' ? () => speakKana(k) : undefined}
+                    onClick={isActive && type === 'kana' ? () => speakKana(k, ROMAJI[i][j]) : undefined}
                     title={isActive && type === 'kana' ? '點擊發音' : ''}
                   >
                     {cell}
@@ -211,7 +218,7 @@ function App() {
                 <div style={{ marginBottom: 4, fontWeight: 'bold' }}>平假名</div>
                 {renderTable(HIRAGANA, 'kana')}
               </div>
-              <div>
+              <div className="romaji-table-desktop">
                 <div style={{ marginBottom: 4, fontWeight: 'bold' }}>羅馬拼音</div>
                 {renderTable(ROMAJI, 'romaji')}
               </div>
@@ -223,11 +230,15 @@ function App() {
                 <div style={{ marginBottom: 4, fontWeight: 'bold' }}>片假名</div>
                 {renderTable(KATAKANA, 'kana')}
               </div>
-              <div>
+              <div className="romaji-table-desktop">
                 <div style={{ marginBottom: 4, fontWeight: 'bold' }}>羅馬拼音</div>
                 {renderTable(ROMAJI, 'romaji')}
               </div>
             </div>
+          )}
+          {/* 手機顯示羅馬拼音浮現區 */}
+          {mobileRomaji && (
+            <div className="mobile-romaji-popup">{mobileRomaji}</div>
           )}
         </div>
       )}
