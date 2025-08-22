@@ -54,34 +54,50 @@ function getRandomKanaIdx(maxIdx: number) {
 function App() {
   const [mode, setMode] = useState<'table' | 'quiz' | 'result'>('table');
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
+  // 依 kanaType 分開記錄進度、歷史、全對次數
+// 依 kanaType 分開記錄進度、歷史、全對次數
+const STORAGE = {
+  hiragana: {
+    stage: 'kana_stage_hira',
+    history: 'kana_scores_hira',
+    perfect: 'kana_perfect_hira',
+  },
+  katakana: {
+    stage: 'kana_stage_kata',
+    history: 'kana_scores_kata',
+    perfect: 'kana_perfect_kata',
+  }
+};
+
   const [stage, setStage] = useState(1); // 當前階段
   const [quizIdx, setQuizIdx] = useState(getRandomKanaIdx(STAGE_SIZE - 1));
-  // 選擇題選項
   const [options, setOptions] = useState<string[]>([]);
-  // const [answer, setAnswer] = useState(''); // 已不使用
   const [score, setScore] = useState<number[]>([]); // 本次測驗分數
   const MAX_QUIZ_QUESTIONS = 10;
   const [history, setHistory] = useState<{stage: number, correct: number, total: number}[]>([]); // 歷史成績
   const [stagePerfectCount, setStagePerfectCount] = useState<number[]>([]); // 每階段10次全對次數
-  // 新增：手機版假名點擊時顯示羅馬拼音
   const [mobileRomaji, setMobileRomaji] = useState<string>('');
 
-  // 載入進度
+  // 載入對應 kanaType 的進度
   useEffect(() => {
-    const saved = localStorage.getItem('kana_scores');
-    if (saved) setHistory(JSON.parse(saved));
-    const savedStage = localStorage.getItem('kana_stage');
-    if (savedStage) setStage(Number(savedStage));
-    const savedPerfect = localStorage.getItem('kana_perfect');
-    if (savedPerfect) setStagePerfectCount(JSON.parse(savedPerfect));
-  }, []);
+    const key = STORAGE[kanaType];
+    const saved = localStorage.getItem(key.history);
+    setHistory(saved ? JSON.parse(saved) : []);
+    const savedStage = localStorage.getItem(key.stage);
+    setStage(savedStage ? Number(savedStage) : 1);
+    const savedPerfect = localStorage.getItem(key.perfect);
+    setStagePerfectCount(savedPerfect ? JSON.parse(savedPerfect) : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kanaType]);
 
-  // 儲存進度
+  // 儲存對應 kanaType 的進度
   useEffect(() => {
-    localStorage.setItem('kana_scores', JSON.stringify(history));
-    localStorage.setItem('kana_stage', String(stage));
-    localStorage.setItem('kana_perfect', JSON.stringify(stagePerfectCount));
-  }, [history, stage, stagePerfectCount]);
+    const key = STORAGE[kanaType];
+    localStorage.setItem(key.history, JSON.stringify(history));
+    localStorage.setItem(key.stage, String(stage));
+    localStorage.setItem(key.perfect, JSON.stringify(stagePerfectCount));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history, stage, stagePerfectCount, kanaType]);
 
   // 點擊假名時發音
   function speakKana(kana: string, romaji?: string) {
@@ -97,9 +113,17 @@ function App() {
   }
 
   // 顯示五十音表（只顯示目前階段的母音橫列，其餘為 '-'）
+  // 顯示所有已通過的音，未通過的顯示為 '-'
   const renderTable = (kana: string[][], type: 'kana' | 'romaji') => {
-    // 目前階段的母音橫列 index
-    const rowIdx = stage - 1;
+    // 已通過的音數
+    const unlocked = Math.min(stage * STAGE_SIZE, (kanaType === 'hiragana' ? FLAT_HIRAGANA : FLAT_KATAKANA).length);
+    let flat = [];
+    if (type === 'kana') {
+      flat = (kanaType === 'hiragana' ? FLAT_HIRAGANA : FLAT_KATAKANA).map(x => x.k);
+    } else {
+      flat = FLAT_ROMAJI.map(x => x.k);
+    }
+    let idx = 0;
     return (
       <div className="table-responsive">
         <table className="table table-bordered text-center align-middle w-100" style={{fontSize: 'clamp(1.2rem, 4vw, 2.2rem)'}}>
@@ -109,16 +133,20 @@ function App() {
                 {row.map((k, j) => {
                   let cell = '-';
                   let isActive = false;
-                  if (i === rowIdx && k) {
-                    isActive = true;
-                    if (type === 'kana') cell = k;
-                    else cell = ROMAJI[i][j] || '-';
+                  if (k && idx < flat.length) {
+                    if (idx < unlocked) {
+                      cell = flat[idx];
+                      isActive = type === 'kana';
+                    }
+                    idx++;
+                  } else if (k) {
+                    idx++;
                   }
                   return (
                     <td
                       key={j}
-                      style={isActive && type === 'kana' ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
-                      onClick={isActive && type === 'kana' ? () => speakKana(k, ROMAJI[i][j]) : undefined}
+                      style={isActive ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
+                      onClick={isActive ? () => speakKana(cell, type === 'kana' ? FLAT_ROMAJI[idx-1]?.k : undefined) : undefined}
                       title={isActive && type === 'kana' ? '點擊發音' : ''}
                     >
                       {cell}
@@ -166,7 +194,14 @@ function App() {
       if (next.length >= MAX_QUIZ_QUESTIONS) {
         setTimeout(() => finishQuiz(next), 200); // 稍微延遲，讓最後一題有反饋
       } else {
-        setQuizIdx(getRandomKanaIdx(unlockedCount - 1));
+        let newIdx = getRandomKanaIdx(unlockedCount - 1);
+        // 避免與上一題重複
+        let tryCount = 0;
+        while (newIdx === quizIdx && unlockedCount > 1 && tryCount < 10) {
+          newIdx = getRandomKanaIdx(unlockedCount - 1);
+          tryCount++;
+        }
+        setQuizIdx(newIdx);
       }
       return next;
     });
@@ -177,28 +212,30 @@ function App() {
     const quizScore = finalScore || score;
     const correct = quizScore.filter(s => s === 1).length;
     const total = quizScore.length;
-    setHistory((h) => [...h, { stage, correct, total }]);
-    // 若全對，記錄本階段全對次數
-    if (correct === MAX_QUIZ_QUESTIONS) {
-      setStagePerfectCount((arr) => {
-        const next = [...arr];
-        next[stage - 1] = (next[stage - 1] || 0) + 1;
-        // 若本階段已10次全對且還有下一階段，解鎖下一階段
-        if (next[stage - 1] === 10 && stage < STAGES) {
-          setStage(stage + 1);
-        }
-        return next;
-      });
+    // 只有完成10題才記錄成績
+    if (total === MAX_QUIZ_QUESTIONS) {
+      setHistory((h) => [...h, { stage, correct, total }]);
+      // 若全對，記錄本階段全對次數
+      if (correct === MAX_QUIZ_QUESTIONS) {
+        setStagePerfectCount((arr) => {
+          const next = [...arr];
+          next[stage - 1] = (next[stage - 1] || 0) + 1;
+          // 若本階段已10次全對且還有下一階段，解鎖下一階段
+          if (next[stage - 1] === 10 && stage < STAGES) {
+            setStage((prev) => {
+              // 進入新階段時清空歷史成績
+              setHistory([]);
+              return prev + 1;
+            });
+          }
+          return next;
+        });
+      }
     }
     setMode('result');
   }
 
   // 重新開始
-  function restart() {
-    setScore([]);
-    setMode('quiz');
-    setQuizIdx(getRandomKanaIdx(unlockedCount - 1));
-  }
 
   return (
     <div className="container py-3">
@@ -266,21 +303,18 @@ function App() {
             </div>
             <div className="mb-2">
               <span>答對：{score.filter(s => s === 1).length} / {MAX_QUIZ_QUESTIONS}</span>
-              <button className="btn btn-success ms-2" onClick={() => finishQuiz()} disabled={score.length < MAX_QUIZ_QUESTIONS}>結算成績</button>
             </div>
-            {score.length >= MAX_QUIZ_QUESTIONS && <div className="text-danger mt-2">已完成 10 題，請點「結算成績」</div>}
           </div>
         </div>
       )}
       {mode === 'result' && (
         <div className="text-center">
           <h2 className="text-warning mt-4 mb-3">歷史成績</h2>
-          <ul className="list-unstyled text-light">
+          <ul className="list-unstyled" style={{color:'#222', background:'#fff', borderRadius:8, maxWidth:400, margin:'0 auto', padding:'1em 0.5em'}}>
             {history.map((s, i) => (
-              <li key={i} className="mb-1">第 {i + 1} 次：階段 {s.stage}，{s.correct} / {s.total} 全對</li>
+              <li key={i} className="mb-1">第 {i + 1} 次：階段 {s.stage}，{s.correct} / {s.total}{s.correct === s.total ? ' 全對' : ''}</li>
             ))}
           </ul>
-          <button className="btn btn-primary" onClick={restart}>再測一次</button>
         </div>
       )}
     </div>
