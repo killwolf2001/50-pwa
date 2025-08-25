@@ -53,6 +53,7 @@ function getRandomKanaIdx(maxIdx: number) {
 
 function App() {
   const [mode, setMode] = useState<'table' | 'quiz' | 'result'>('table');
+  const [quizStarted, setQuizStarted] = useState(false);
   const [kanaType, setKanaType] = useState<KanaType>('hiragana');
   // 依 kanaType 分開記錄進度、歷史、全對次數
 // 依 kanaType 分開記錄進度、歷史、全對次數
@@ -100,12 +101,20 @@ const STORAGE = {
   }, [history, stage, stagePerfectCount, kanaType]);
 
   // 點擊假名時發音
-  function speakKana(kana: string, romaji?: string) {
+  function speakKana(kana: string) {
     if (!kana) return;
     const utter = new window.SpeechSynthesisUtterance(kana);
     utter.lang = 'ja-JP';
     window.speechSynthesis.speak(utter);
-    // 僅在手機/窄螢幕時顯示羅馬拼音
+    // 查找對應羅馬拼音
+    let romaji = '';
+    if (kanaType === 'hiragana') {
+      const idx = FLAT_HIRAGANA.findIndex(x => x.k === kana);
+      if (idx >= 0) romaji = FLAT_ROMAJI[idx]?.k || '';
+    } else {
+      const idx = FLAT_KATAKANA.findIndex(x => x.k === kana);
+      if (idx >= 0) romaji = FLAT_ROMAJI[idx]?.k || '';
+    }
     if (window.innerWidth <= 900 && romaji) {
       setMobileRomaji(romaji);
       setTimeout(() => setMobileRomaji(''), 1800);
@@ -146,7 +155,7 @@ const STORAGE = {
                     <td
                       key={j}
                       style={isActive ? { cursor: 'pointer', color: '#1976d2', fontWeight: 600 } : {}}
-                      onClick={isActive ? () => speakKana(cell, type === 'kana' ? FLAT_ROMAJI[idx-1]?.k : undefined) : undefined}
+                      onClick={isActive && type === 'kana' ? () => speakKana(cell) : undefined}
                       title={isActive && type === 'kana' ? '點擊發音' : ''}
                     >
                       {cell}
@@ -192,7 +201,10 @@ const STORAGE = {
     setScore((s) => {
       const next = [...s, choice === quizRomaji ? 1 : 0];
       if (next.length >= MAX_QUIZ_QUESTIONS) {
-        setTimeout(() => finishQuiz(next), 200); // 稍微延遲，讓最後一題有反饋
+        setTimeout(() => {
+          finishQuiz(next);
+          setQuizStarted(false);
+        }, 200); // 稍微延遲，讓最後一題有反饋
       } else {
         let newIdx = getRandomKanaIdx(unlockedCount - 1);
         // 避免與上一題重複
@@ -284,8 +296,12 @@ const STORAGE = {
       {mode === 'quiz' && (
         <div className="text-center">
           <div className="mb-2">
-            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='hiragana'?'active':''}`} onClick={() => setKanaType('hiragana')}>平假名</button>
-            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='katakana'?'active':''}`} onClick={() => setKanaType('katakana')}>片假名</button>
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='hiragana'?'active':''}`} onClick={() => { setKanaType('hiragana'); setQuizStarted(false); setScore([]); }}>
+              平假名
+            </button>
+            <button className={`btn btn-outline-secondary mx-1 ${kanaType==='katakana'?'active':''}`} onClick={() => { setKanaType('katakana'); setQuizStarted(false); setScore([]); }}>
+              片假名
+            </button>
           </div>
           <div className="mb-2 text-warning fw-bold">
             <span>目前階段：</span> {stage} / {STAGES}（已解鎖 {unlockedCount} 個音）<br />
@@ -294,17 +310,23 @@ const STORAGE = {
               {stagePerfectCount[stage-1] === 10 && stage < STAGES ? ' 🎉 恭喜！已解鎖下一階段！' : ''}
             </span>
           </div>
-          <div className="quiz-area mx-auto p-3 rounded bg-light shadow-sm" style={{maxWidth:400}}>
-            <div className="display-4 my-3">{quizKana}</div>
-            <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
-              {options.map(opt => (
-                <button key={opt} className="btn btn-outline-primary" style={{minWidth:80,fontSize:20}} onClick={() => handleChoice(opt)} disabled={score.length >= MAX_QUIZ_QUESTIONS}>{opt}</button>
-              ))}
+          {!quizStarted ? (
+            <button className="btn btn-lg btn-success my-4" onClick={() => { setQuizStarted(true); setScore([]); setQuizIdx(getRandomKanaIdx(unlockedCount - 1)); }}>
+              開始測驗
+            </button>
+          ) : (
+            <div className="quiz-area mx-auto p-3 rounded bg-light shadow-sm" style={{maxWidth:400}}>
+              <div className="display-4 my-3">{quizKana}</div>
+              <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                {options.map(opt => (
+                  <button key={opt} className="btn btn-outline-primary" style={{minWidth:80,fontSize:20}} onClick={() => handleChoice(opt)} disabled={score.length >= MAX_QUIZ_QUESTIONS}>{opt}</button>
+                ))}
+              </div>
+              <div className="mb-2">
+                <span>答對：{score.filter(s => s === 1).length} / {MAX_QUIZ_QUESTIONS}</span>
+              </div>
             </div>
-            <div className="mb-2">
-              <span>答對：{score.filter(s => s === 1).length} / {MAX_QUIZ_QUESTIONS}</span>
-            </div>
-          </div>
+          )}
         </div>
       )}
       {mode === 'result' && (
